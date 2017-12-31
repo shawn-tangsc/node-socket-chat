@@ -1,5 +1,10 @@
 
 var sio = require('socket.io');
+// var mongodb = require('./db/mongodb');
+// var mongoose = require('./db/mongoose'),
+//     Schema = mongoose.Schema;
+var User = require('./db/model/User');
+var Message = require('./db/model/Message')
 var IO = function(server) {
     var io = sio.listen(server)
     var users = {},
@@ -14,6 +19,7 @@ var IO = function(server) {
         socket.broadcast.emit('hi', {})
         socket.on('chat message', function(data) {
             sendmsg(data);
+            insertMessage(data);
         });
         socket.on('user join', function(data) {
             counter++;
@@ -25,6 +31,7 @@ var IO = function(server) {
             data.counter = counter;
             data.msg = "欢迎<b>" + data.user + "</b>进入聊天室";
             sendmsg(data);
+            insertUser();
         });
         socket.on('disconnect', function() {
             console.log('disconnect2')
@@ -104,6 +111,50 @@ var IO = function(server) {
             usocket[data.user].emit('to' + data.user, data);
             console.log('================')
         }
+    }
+
+
+    /**
+     * mongodb 操作
+     */
+    // function insertInfo() {
+    //     mongodb.insert();
+    // }
+    /**
+     * mongoose 操作mongodb
+     */
+    function insertUser() {
+        var user = new User({
+           username : 'helloworld',
+            userpwd: 'abcd',
+            userage: 37,
+            logindate: new Date()
+        });
+        user.save(function (err,res) {
+            if(err){
+                console.log('Error:'+err);
+            }else{
+                console.log('res:'+res);
+            }
+        })
+    }
+
+    /**
+     * 插入message
+     */
+    function insertMessage(data) {
+        var message = new Message({
+            msg:data.msg,
+            to : data.to,
+            user : data.user
+        })
+        message.save(function (err,res) {
+            if(err){
+                console.log('Error:'+err);
+            }else{
+                console.log('res:'+res);
+            }
+        })
     }
 }
 module.exports = IO;
