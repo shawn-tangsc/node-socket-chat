@@ -68,6 +68,7 @@ $(function() {
         socket.emit('chat message', {
             msg: $('#m').val(),
             user: user,
+            userLevel: 51,
             to: $('#sel_obj').val()
         });
         $('#m').val('');
@@ -86,7 +87,7 @@ $(function() {
             }
             if (data.type === 2) {
                 cls += " private ";
-                type = "（悄悄话）"
+                type = "（操作）"
             }
             $('#messages').append($('<li class="msg ' + cls + '"><p><b>' + data.user + type + '</b>：<span>(' + formatTime(data.time) + ')</span></p><div>' + data.msg + '</div></li>'))
         };

@@ -13,75 +13,67 @@ var IO = function(server) {
     var home = {};
     // var xss = require('xss');
 
+
+    /**
+    * socketIO 内置事件
+    * http://cnodejs.org/topic/53911fd9c3ee0b5820f0b9ef
+    *
+    * */
+
+
     io.on('connection', function(socket) {
-        console.log('a user connected.');
+        console.log('a user connected.'+socket.id);
         var username = "";
-        socket.broadcast.emit('hi', {})
+
+
+
+        //发送消息事件
         socket.on('chat message', function(data) {
             sendmsg(data);
-            insertMessage(data);
+            // insertMessage(data);
         });
+
+        //用户进入事件
         socket.on('user join', function(data) {
             counter++;
             users[username] = data.user;
             usocket[username] = socket;
+            var commonData = {};
+            commonData.type = 1;
+            commonData.msg = "我们提倡绿色直播，严禁涉政、涉恐、涉群体性事件、涉黄等直播";
+            usocket[username].emit('to ' + data.user, commonData);
             console.log('join:' + data.user);
-            data.type = 0;
+            data.type = 1;
             data.users = users;
             data.counter = counter;
-            data.msg = "欢迎<b>" + data.user + "</b>进入聊天室";
+            data.msg = "欢迎 " + data.user + " 进入聊天室";
             sendmsg(data);
-            insertUser();
+            // insertUser();
         });
+
+        //断开连接事件
         socket.on('disconnect', function() {
             console.log('disconnect2')
             if (username) {
                 counter--;
                 delete users[username];
                 delete usocket[username];
-                if (home.name == username) {
-                    homeLeave(username);
-                }
                 sendmsg({
-                    type: 0,
+                    type: 1,
                     msg: "用户<b>" + username + "</b>离开聊天室",
                     counter: counter,
                     users: users
                 })
             }
         });
-        socket.on("home", function(data) {
-            console.log('home:' + home.name)
-            var user = data.user;
-            if( !users[home.name] ){
-                home = {};
-            }
-            if (!home.name) {
-                home.name = user;
-                home.socket = socket;
-                usocket[user].emit('sys' + user, {
-                    user: user,
-                    msg: "当前房主(" + home.name + ");等他退出后，你就可以申请房主了."
-                });
-            } else {
-                usocket[user].emit('sys' + user, {
-                    user: home.name,
-                    msg: "当前已经有房主(" + home.name + ");等他退出后，你就可以申请房主了."
-                });
-            }
-            console.log('home:' + home.name)
-        });
-        socket.on('home leave', function(uname) {
-            homeLeave(uname);
-        })
     });
 
-    function homeLeave(uname) {
-        if (home.name && home.name == uname) {
-            home = {};
-            io.emit('home leave', uname);
-        }
-    }
+    // function homeLeave(uname) {
+    //     if (home.name && home.name == uname) {
+    //         home = {};
+    //         io.emit('home leave', uname);
+    //     }
+    // }
     // //插入数据库
     // function insertData(data) {
     //     var conn = db.connect();
